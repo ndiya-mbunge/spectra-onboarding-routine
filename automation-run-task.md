@@ -1,43 +1,20 @@
-# Automation run, scheduled task text (revised 9 October 2026)
+Run the client onboarding skill's automatic step check. For every active client in the Spectra Onboardings Asana project, read its parent task and its own Asana project, then check every step the skill marks automatic against what it actually depends on, and execute any step whose dependency is now met.
 
-Replaces `references/automation-run-task.md` in the client-onboarding skill. Skill files cannot be edited from inside a run (rule 2a), so Ndiya pastes this into the scheduled task and replaces the skill copy.
+How to read and write the Client Registry. Never use the Google Drive connector for the Registry, it returns a stale snapshot and cannot write. Use Make:
+1. Live read: Make scenario 9943488, scenarios_run with {"range": "A1:L30"} and responsive true. It returns one pipe separated line per row, columns A to L.
+2. Write: Make scenario 9943482, scenarios_run with {"cell": "E10", "value": "Own account"}, one cell per call, one call at a time. Always read the live Registry first, find the client's row by the name in column A, and build the cell address from that row. Never assume a row number. Read the row back after writing and confirm it.
 
-What changed, and why. Twenty passes on 8 Oct ended "nothing completed" for three reasons, all fixed in the tooling and now in the text below:
+What to execute when its dependency is met and it has not run: 35a and the 47, 38a and 73 Registry backfills, 57a once targets exist anywhere (a target Ndiya typed on the Registry or Dashboard is carried into the row, never questioned), 65, 70 and 77, 73 BreakCold wiring, 79. Closing the step's own Asana task is part of doing it, with a comment naming the object created or the value written. Never close a human owned task on inference. Where the real system can be read (Registry, BreakCold, Instantly, Slack, the client's Claude project), checking it and closing on that is verification and is fine.
 
-1. The Google Drive connector returns a stale cached snapshot and cannot write. Passes concluded the Zeal and Shipwright Registry rows did not exist, they did. Registry reads and writes now go through Make.
-2. No run could call Instantly or SmartLead, because the Make passthrough scenarios take the API key as an input and a run must never hold a key (38b). Keys now sit in a Make data store and a scenario looks the key up itself.
-3. A run that could not do something posted the same blocker list every hour. It now posts only when something changed.
+Platform keys. Never write, quote or echo a key anywhere except into the Make scenario call that needs it. For 65, 70 and 77 and for any question about what is live in a client's Instantly or SmartLead account:
+1. Using the Claude in Chrome browser connection, open that client's Claude project on claude.ai and read its sweep config doc. The key sits there by the named exception at 38a. Never sign in, never enter a password. If claude.ai is signed out, stop and say so.
+2. Call the Make Instantly v2 passthrough tool (s9793643_instantly_v_2_passthrough) with that key, read only first, and use the result. Do not store the key, write it to Asana, Slack or the Registry, or include it in any message or comment.
+3. Where no client config doc yet holds a key, that client's 65, 70 and 77 wait, and that is the only blocker to report.
 
-## Tools this run uses
+Browser work in general. This task runs on Ndiya's laptop, where the Claude in Chrome connection exists. Any step that needs the browser (Claude project instructions and uploads under 2b, reading a platform screen no API reaches, checking what Instantly or SmartLead actually offers) is done in this run, read back, evidenced on the Asana task, and closed. If the browser connection is not available in this run, create or update one Asana task named "Browser queue: [step]" assigned to Ndiya with the exact actions, and leave it for the next run that has the browser. The open task is the saved work.
 
-1. Registry read, live: Make scenario 9943488. `scenarios_run` with `{"range": "A1:L30"}`, `responsive: true`. Returns one line per row, pipe separated, columns A to L. Always use this, never the Drive connector, for any Registry fact.
-2. Registry write: Make scenario 9943482. `scenarios_run` with `{"cell": "E10", "value": "Own account"}`. One cell per call, sequential, a run cannot overlap itself. Before any write, read the live Registry, find the client's row by name in column A, and build the cell address from that row. Never assume a row number. After the write, read the row back and confirm it.
-3. Platform call: Make scenario 9943494. `scenarios_run` with `{"client": "<Registry client name>", "method": "get", "path": "/api/v2/campaigns?limit=100", "body": ""}`. The key is looked up inside Make from data store 194341 (record key is the Registry client name). The scenario returns only the platform's status and body, never the key. If the data store has no record for the client, the call fails: that is the "platform key does not exist yet" state, and 65, 70 and 77 wait for it. Where the platform is SmartLead the same store holds the key, the scenario currently targets Instantly only.
-4. Browser queue: see below.
+Facts to check in the browser instead of asking people. Before asking Zane or anyone whether Instantly has an equivalent of a SmartLead client record, or whose Instantly account a client is on, look in the client's Instantly workspace and record what you find on the task. Ask a human only what cannot be seen.
 
-## Instructions
+Also compare the live BreakCold Client options with breakcold_ids.md in the breakcold-pipeline skill. If anything is missing or wrong, never write the file: generate the complete corrected file and flag it to Ndiya with the full content.
 
-Run the client onboarding skill's automatic step check. For every active client in the Spectra Onboardings Asana project, read its parent task and its own Asana project, then check every step the skill marks automatic against what it actually depends on.
-
-1. Read the live Registry first (tool 1). Treat it as the only source for what a Registry row holds. A Drive read that disagrees with it is the stale one.
-2. Where a step's dependency is met and it has not run, execute it: 35a and the 47, 38a and 73 backfills, 57a once targets exist anywhere (a target Ndiya typed on the Registry or Dashboard is carried into the row, never questioned), 65, 70 and 77 once this client's key record exists in the data store, 73 BreakCold wiring, 79.
-3. Closing the step's own Asana task is part of doing it, with a comment naming the object created or the value written. Never a human owned task on inference. Where the real system can be read (Registry, BreakCold, Instantly through tool 3, Slack), verification is allowed and closing on it is fine.
-4. Registry fields describe the key situation (Platform, Sending account, Platform client ID), never the key value. Never write, read back or quote a key anywhere.
-5. Do not write a Registry value you cannot source. A blank is correct when the source does not exist (for example Sending account when nobody has said whose Instantly account it is). Name the missing source and who holds it instead.
-6. Compare the live BreakCold Client options with `breakcold_ids.md`. If anything is missing or wrong, never write the file: generate the full corrected file and flag it to Ndiya with the full content.
-
-## Browser work
-
-Some steps can only be done in Ndiya's browser (Claude project instructions and uploads, Instantly or SmartLead screens with no API, Underfive screens the MCP does not reach). A scheduled cloud run has no browser. Do not mark these as failed and do not repeat them in every message.
-
-1. Create or update one Asana task per client titled `Browser queue: [step]`, assigned to Ndiya, with the exact actions, the URL, and the read back that proves it. This is the queue. Asana is the state.
-2. A run that has the Claude in Chrome connection (a local Claude Code session on Ndiya's laptop, scheduled the same way) drains the queue: it opens each queued task, does the action, reads it back, comments the evidence and closes the task. It never enters a password or signs in, and stops with a comment if claude.ai or the platform is signed out.
-3. A run without the connection leaves the queue untouched. The task being open is the "saved for the next run with a browser".
-
-## Messaging
-
-1. Post in `#spectra-onboardings` only when something changed since the last pass: a step completed, a new blocker appeared, a blocker cleared, or a connector that was working started failing. One consolidated message per client, naming everything completed.
-2. A blocker that was already reported and has not changed is not repeated. Keep one standing comment on the parent task and edit nothing else. The Asana due dates and the daily run keep holding it to account.
-3. A step that has been blocked on a tooling gap for more than one working day becomes a task on Ndiya naming the gap, once.
-4. If a connector call itself errors, comment the exact error on the task and name the connector in that client's message, once per distinct error, not once per pass.
-5. Never post a Slack message to a client facing channel. Drafts only, per 16b.
+Messaging. Post in #spectra-onboardings only when something changed since the last pass: a step completed, a new blocker appeared, a blocker cleared, or a working connector started failing. One consolidated message per client naming everything that completed. Never repeat a blocker that was already reported and has not changed, keep one standing comment on the parent task instead. If a connector call errors, comment the exact error on the task and name the connector in that client's message once per distinct error. Never post to a client facing channel, drafts only. Never touch a step that needs a human: a judgment gate, an approval, a decision on numbers.
