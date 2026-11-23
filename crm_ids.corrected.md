@@ -86,7 +86,7 @@ The client label is the Underfive workspace name. The platform tag is the route 
 | not set yet, set at onboarding step 73 | CJ Digital |
 | not set yet, set at onboarding step 73 | Gauge Digital |
 
-Zeal's Spectra Calendly event type: `ee833f53-8a71-4294-aa64-4890e3eab88a`. Zeal campaigns created before its start day are excluded; the list lives in scenarios 9875824 and 10063097, and the hub applies the same start day through `campaignsFrom`.
+Zeal's Spectra Calendly event type: `ee833f53-8a71-4294-aa64-4890e3eab88a`. Zeal campaigns created before its start day are excluded; the list lives in scenario 10063097 (and in 9875824, now off), and the hub applies the same start day through `campaignsFrom`.
 
 ## Pipeline infrastructure Slack channels
 Context only. The record of alerts is `get_health`.
